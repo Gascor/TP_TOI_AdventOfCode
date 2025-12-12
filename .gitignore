@@ -1,0 +1,26 @@
+# Executables
+tp6
+a.out
+*.exe
+
+# Object files
+*.o
+
+# Debug / profiling
+*.out
+*.gdb
+gmon.out
+
+# Build directories (si tu en ajoutes plus tard)
+build/
+bin/
+
+# Temporary / editor files
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
