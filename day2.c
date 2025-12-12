@@ -85,6 +85,40 @@ static Vec merge_intervals(Vec in) {
     return out;
 }
 
+/* --- Outils pour calculs un peu grands (somme peut dépasser uint64) --- */
+static unsigned __int128 u128_pow10(int k) {
+    unsigned __int128 r = 1;
+    for (int i = 0; i < k; i++) r *= 10;
+    return r;
+}
+
+static unsigned __int128 u128_ceil_div(unsigned __int128 a, unsigned __int128 b) {
+    return (a + b - 1) / b;
+}
+
+static unsigned __int128 u128_sum_arith(unsigned __int128 lo, unsigned __int128 hi) {
+    unsigned __int128 n = hi - lo + 1;
+    return (lo + hi) * n / 2;
+}
+
+/* Affichage de __int128 sans se compliquer la vie */
+static void print_u128(unsigned __int128 x) {
+    if (x == 0) { putchar('0'); return; }
+    char buf[64];
+    int i = 0;
+    while (x > 0) {
+        buf[i++] = (char)('0' + (unsigned)(x % 10));
+        x /= 10;
+    }
+    while (i--) putchar(buf[i]);
+}
+
+static int digits_u64(uint64_t x) {
+    int d = 1;
+    while (x >= 10) { x /= 10; d++; }
+    return d;
+}
+
 /* Lecture simple de tout stdin dans un buffer */
 static char *read_all_stdin(void) {
     size_t cap = 1 << 20;   /* 1 Mo au départ */
