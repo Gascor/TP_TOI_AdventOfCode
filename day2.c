@@ -22,6 +22,38 @@ static void vec_push(Vec *x, Interval it) {
     x->v[x->n++] = it;
 }
 
+/* Parse la ligne du sujet : "a-b,c-d,..." */
+static Vec parse_intervals(const char *s) {
+    Vec v = (Vec){0};
+
+    /* On duplique car strtok modifie la chaîne */
+    char *tmp = strdup(s);
+    if (!tmp) { perror("strdup"); exit(1); }
+
+    const char *delim = ", \t\r\n";
+    char *saveptr = NULL;
+    char *tok = strtok_r(tmp, delim, &saveptr);
+
+    while (tok) {
+        char *dash = strchr(tok, '-');
+        if (!dash) {
+            fprintf(stderr, "Token invalide (pas de '-'): %s\n", tok);
+            exit(1);
+        }
+        *dash = '\0';
+
+        uint64_t a = strtoull(tok, NULL, 10);
+        uint64_t b = strtoull(dash + 1, NULL, 10);
+        if (a > b) { uint64_t t = a; a = b; b = t; }
+
+        vec_push(&v, (Interval){a, b});
+        tok = strtok_r(NULL, delim, &saveptr);
+    }
+
+    free(tmp);
+    return v;
+}
+
 /* Lecture simple de tout stdin dans un buffer */
 static char *read_all_stdin(void) {
     size_t cap = 1 << 20;   /* 1 Mo au départ */
