@@ -110,9 +110,12 @@ int main(void) {
     Vec raw = parse_intervals(input);
     free(input);
 
-    fprintf(stderr, "Intervalles lus : %zu\n", raw.n);
-
+    Vec merged = merge_intervals(raw);
     free(raw.v);
+
+    fprintf(stderr, "Intervalles après fusion : %zu\n", merged.n);
+
+    free(merged.v);
     return 0;
 }
 
