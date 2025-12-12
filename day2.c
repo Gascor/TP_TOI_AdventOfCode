@@ -140,6 +140,86 @@ static unsigned __int128 solve_q1_interval(uint64_t A, uint64_t B) {
     return total;
 }
 
+/* mu(n) petit : longueur <= ~19 donc ça suffit */
+static int mobius(int n) {
+    if (n == 1) return 1;
+    int cnt = 0;
+    for (int p = 2; p * p <= n; p++) {
+        if (n % p == 0) {
+            n /= p;
+            cnt++;
+            if (n % p == 0) return 0; /* facteur carré */
+            while (n % p == 0) n /= p;
+        }
+    }
+    if (n > 1) cnt++;
+    return (cnt % 2 == 0) ? 1 : -1;
+}
+
+static int divisors(int n, int *out) {
+    int k = 0;
+    for (int d = 1; d <= n; d++) if (n % d == 0) out[k++] = d;
+    return k;
+}
+
+/* Multiplicateur pour répéter un bloc de k chiffres r fois */
+static unsigned __int128 repeat_multiplier(int k, int r) {
+    unsigned __int128 p = u128_pow10(k);
+    unsigned __int128 M = 0;
+    for (int i = 0; i < r; i++) M = M * p + 1;
+    return M;
+}
+
+/*
+ * Q2 : motif répété >= 2 fois.
+ * Important : éviter de compter plusieurs fois (ex 12121212 aurait période 2 et 4).
+ * On utilise une petite inversion de Möbius sur les périodes.
+ */
+static unsigned __int128 solve_q2_interval(uint64_t A, uint64_t B) {
+    int maxD = digits_u64(B);
+    __int128 total = 0;
+
+    for (int L = 2; L <= maxD; L++) {
+        int divsL[64];
+        int nDivL = divisors(L, divsL);
+
+        unsigned __int128 S[32];
+        for (int i = 0; i < 32; i++) S[i] = 0;
+
+        /* S[d] = somme des nombres de longueur L ayant une période d (pas forcément minimale) */
+        for (int i = 0; i < nDivL; i++) {
+            int d = divsL[i];
+            int r = L / d;
+            if (r < 2) continue;
+
+            unsigned __int128 M = repeat_multiplier(d, r);
+            S[d] = sum_scaled_in_range(A, B, d, M);
+        }
+
+        /* période minimale via Möbius */
+        for (int i = 0; i < nDivL; i++) {
+            int d = divsL[i];
+            int r = L / d;
+            if (r < 2) continue;
+
+            int divsd[64];
+            int nDivd = divisors(d, divsd);
+
+            __int128 minSum = 0;
+            for (int j = 0; j < nDivd; j++) {
+                int e = divsd[j];
+                int mu = mobius(d / e);
+                if (mu == 0) continue;
+                minSum += (__int128)mu * (__int128)S[e];
+            }
+            total += minSum;
+        }
+    }
+
+    if (total < 0) total = 0;
+    return (unsigned __int128)total;
+}
+
 /* Affichage de __int128 sans se compliquer la vie */
 static void print_u128(unsigned __int128 x) {
     if (x == 0) { putchar('0'); return; }
@@ -187,12 +267,18 @@ int main(void) {
     free(raw.v);
 
     unsigned __int128 sum1 = 0;
+    unsigned __int128 sum2 = 0;
 
     for (size_t i = 0; i < merged.n; i++) {
-        sum1 += solve_q1_interval(merged.v[i].a, merged.v[i].b);
+        uint64_t A = merged.v[i].a;
+        uint64_t B = merged.v[i].b;
+        sum1 += solve_q1_interval(A, B);
+        sum2 += solve_q2_interval(A, B);
     }
 
     print_u128(sum1);
+    putchar('\n');
+    print_u128(sum2);
     putchar('\n');
 
     free(merged.v);
