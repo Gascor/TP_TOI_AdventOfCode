@@ -3,6 +3,25 @@
 #include <stdint.h>
 #include <string.h>
 
+typedef struct {
+    uint64_t a, b;
+} Interval;
+
+/* Petit vecteur dynamique (fait maison) */
+typedef struct {
+    Interval *v;
+    size_t n, cap;
+} Vec;
+
+static void vec_push(Vec *x, Interval it) {
+    if (x->n == x->cap) {
+        x->cap = x->cap ? x->cap * 2 : 16;
+        x->v = (Interval*)realloc(x->v, x->cap * sizeof(Interval));
+        if (!x->v) { perror("realloc"); exit(1); }
+    }
+    x->v[x->n++] = it;
+}
+
 /* Lecture simple de tout stdin dans un buffer */
 static char *read_all_stdin(void) {
     size_t cap = 1 << 20;   /* 1 Mo au départ */
