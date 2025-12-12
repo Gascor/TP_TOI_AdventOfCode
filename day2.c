@@ -54,6 +54,37 @@ static Vec parse_intervals(const char *s) {
     return v;
 }
 
+static int cmp_interval(const void *p, const void *q) {
+    const Interval *a = (const Interval*)p;
+    const Interval *b = (const Interval*)q;
+    if (a->a < b->a) return -1;
+    if (a->a > b->a) return 1;
+    if (a->b < b->b) return -1;
+    if (a->b > b->b) return 1;
+    return 0;
+}
+
+/* Fusionne les intervalles qui se chevauchent (ou adjacents) */
+static Vec merge_intervals(Vec in) {
+    Vec out = (Vec){0};
+    if (in.n == 0) return out;
+
+    qsort(in.v, in.n, sizeof(Interval), cmp_interval);
+
+    Interval cur = in.v[0];
+    for (size_t i = 1; i < in.n; i++) {
+        Interval nx = in.v[i];
+        if (nx.a <= cur.b + 1) {
+            if (nx.b > cur.b) cur.b = nx.b;
+        } else {
+            vec_push(&out, cur);
+            cur = nx;
+        }
+    }
+    vec_push(&out, cur);
+    return out;
+}
+
 /* Lecture simple de tout stdin dans un buffer */
 static char *read_all_stdin(void) {
     size_t cap = 1 << 20;   /* 1 Mo au départ */
