@@ -101,6 +101,45 @@ static unsigned __int128 u128_sum_arith(unsigned __int128 lo, unsigned __int128 
     return (lo + hi) * n / 2;
 }
 
+/* Somme des nombres x = m*M dans [A,B]
+ * avec m composé de k chiffres (pas de zéro en tête)
+ */
+static unsigned __int128 sum_scaled_in_range(
+    uint64_t A64,
+    uint64_t B64,
+    int k,
+    unsigned __int128 M
+) {
+    unsigned __int128 A = (unsigned __int128)A64;
+    unsigned __int128 B = (unsigned __int128)B64;
+
+    unsigned __int128 mmin = u128_pow10(k - 1);
+    unsigned __int128 mmax = u128_pow10(k) - 1;
+
+    unsigned __int128 lo = u128_ceil_div(A, M);
+    unsigned __int128 hi = B / M;
+
+    if (lo < mmin) lo = mmin;
+    if (hi > mmax) hi = mmax;
+    if (lo > hi) return 0;
+
+    return M * u128_sum_arith(lo, hi);
+}
+
+/* Q1 : nombre invalide si le motif est répété exactement 2 fois (mm) */
+static unsigned __int128 solve_q1_interval(uint64_t A, uint64_t B) {
+    int maxD = digits_u64(B);
+    unsigned __int128 total = 0;
+
+    for (int k = 1; 2 * k <= maxD; k++) {
+        /* x = m * (10^k + 1) => mm */
+        unsigned __int128 M = u128_pow10(k) + 1;
+        total += sum_scaled_in_range(A, B, k, M);
+    }
+
+    return total;
+}
+
 /* Affichage de __int128 sans se compliquer la vie */
 static void print_u128(unsigned __int128 x) {
     if (x == 0) { putchar('0'); return; }
@@ -147,7 +186,14 @@ int main(void) {
     Vec merged = merge_intervals(raw);
     free(raw.v);
 
-    fprintf(stderr, "Intervalles après fusion : %zu\n", merged.n);
+    unsigned __int128 sum1 = 0;
+
+    for (size_t i = 0; i < merged.n; i++) {
+        sum1 += solve_q1_interval(merged.v[i].a, merged.v[i].b);
+    }
+
+    print_u128(sum1);
+    putchar('\n');
 
     free(merged.v);
     return 0;
