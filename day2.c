@@ -76,11 +76,12 @@ static char *read_all_stdin(void) {
 
 int main(void) {
     char *input = read_all_stdin();
-
-    /* TODO : parser les intervalles + résoudre */
-    /* Pour l’instant on affiche juste la taille lue */
-    fprintf(stderr, "Lu %zu caractères\n", strlen(input));
-
+    Vec raw = parse_intervals(input);
     free(input);
+
+    fprintf(stderr, "Intervalles lus : %zu\n", raw.n);
+
+    free(raw.v);
     return 0;
 }
+
